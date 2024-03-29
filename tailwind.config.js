@@ -5,4 +5,18 @@ import typographyPlugin from '@tailwindcss/typography';
 export default {
   content: ['./app/**/*.{js,ts,jsx,tsx}'],
   plugins: [formsPlugin, typographyPlugin],
+  theme: {
+    extend: {
+      colors: {
+        light: '#F2FAFF',
+        secondary: '#D5EDFE',
+        primary: '#052DC1',
+      },
+      fontFamily: {
+        exo: ['Exo', 'sans-serif'],
+        roboto: ['Roboto'],
+        poppins: ['Poppins'],
+      },
+    },
+  },
 };
