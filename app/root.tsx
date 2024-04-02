@@ -1,4 +1,4 @@
-import {Script, useNonce} from '@shopify/hydrogen';
+import {CartReturn, Script, useNonce} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -153,15 +153,6 @@ export default function App() {
     };
   }, [revalidate, serverAccessToken, supabaseClient]);
 
-  useEffect(() => {
-    console.log({fetchers});
-    fetchers?.map((fetcher) => {
-      if (fetchers.length) {
-        console.log('called');
-      }
-    });
-  }, [fetchers?.length]);
-
   return (
     <html lang="en">
       <head>
@@ -171,7 +162,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout>
+        <Layout cart={cart as CartReturn}>
           <Outlet context={{supabaseClient}} />
         </Layout>
         <ScrollRestoration nonce={nonce} />
