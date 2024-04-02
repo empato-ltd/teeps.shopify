@@ -40,12 +40,23 @@ export const CART_QUERY_FRAGMENT = `#graphql
           altText
           width
           height
-
+          
         }
         product {
           handle
           title
           id
+          tags
+          metafields(identifiers: [
+            {namespace: "custom", key: "profile"},
+            {namespace: "custom", key: "nose"},
+            {namespace: "custom", key: "head_accords"},
+            {namespace: "custom", key: "heart_accords"},
+            {namespace: "custom", key: "base_accords"},
+            {namespace: "custom", key: "subtitle"},
+            ]) {
+              value
+          }
         }
         selectedOptions {
           name

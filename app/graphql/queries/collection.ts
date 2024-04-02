@@ -5,6 +5,7 @@ export const COLLECTIONS_QUERY = `#graphql
                 node {
                     id
                     title
+                    handle
                     image {
                         url
                     }
@@ -15,14 +16,15 @@ export const COLLECTIONS_QUERY = `#graphql
 `;
 
 export const COLLECTION_QUERY = `#graphql
-    query Collection {
-        collection(handle: "the-icons") {
+    query Collection($handle: String!) {
+        collection(handle: $handle) {
             title
-            products(first: 10) {
+            products(first: 15) {
                 edges {
                     node {
                         id
                         title
+                        handle
                         variants(first: 1) {
                             edges {
                                 node {

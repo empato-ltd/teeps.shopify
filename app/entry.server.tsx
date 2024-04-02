@@ -13,6 +13,14 @@ export default async function handleRequest(
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     styleSrc: ['https://cdn.shopify.com', 'https://fonts.googleapis.com/'],
     fontSrc: ['https://fonts.gstatic.com'],
+    connectSrc: [
+      'self',
+      'https://monorail-edge.shopifysvc.com',
+      'http://localhost:*',
+      'ws://localhost:*',
+      'ws://127.0.0.1:*',
+      'https://lnepnilpfetzawaaihnx.supabase.co',
+    ],
   });
 
   const body = await renderToReadableStream(

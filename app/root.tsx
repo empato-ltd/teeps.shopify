@@ -1,4 +1,4 @@
-import {useNonce} from '@shopify/hydrogen';
+import {Script, useNonce} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
@@ -15,12 +15,18 @@ import {
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
+  useRevalidator,
+  useFetchers,
 } from '@remix-run/react';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import favicon from '../public/favicon.svg';
 import appStyles from './styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {Layout} from './layout';
+import {COLLECTIONS_QUERY, COLLECTION_QUERY} from './graphql/queries';
+import {useEffect, useState} from 'react';
+import {createBrowserClient} from '@supabase/ssr';
+import {createSupabaseServerClient} from './utils/supabase';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -67,11 +73,19 @@ export const useRootLoaderData = () => {
   return root?.data as SerializeFrom<typeof loader>;
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context, request}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;
   const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
-
   const isLoggedInPromise = customerAccount.isLoggedIn();
+  const {supabaseClient} = createSupabaseServerClient(
+    request,
+    context.env.SUPABASE_URL,
+    context.env.SUPABASE_API_KEY,
+  );
+
+  const {
+    data: {session},
+  } = await supabaseClient.auth.getSession();
 
   // defer the cart query by not awaiting it
   const cartPromise = cart.get();
@@ -91,14 +105,20 @@ export async function loader({context}: LoaderFunctionArgs) {
       headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
   });
+  const {collections} = await context.storefront.query(COLLECTIONS_QUERY);
+  const {collection} = await context.storefront.query(COLLECTIONS_QUERY);
 
   return defer(
     {
-      cart: cartPromise,
+      cart: await cart.get(),
       footer: footerPromise,
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
+      collections: collections?.edges?.map((edge: any) => edge?.node),
+      collection,
+      env: context.env,
+      session,
     },
     {
       headers: {
@@ -110,7 +130,37 @@ export async function loader({context}: LoaderFunctionArgs) {
 
 export default function App() {
   const nonce = useNonce();
-  const data = useLoaderData<typeof loader>();
+  const {session, env, cart} = useLoaderData<typeof loader>();
+  const {revalidate} = useRevalidator();
+  const fetchers = useFetchers();
+  const serverAccessToken = session?.access_token;
+
+  const [supabaseClient] = useState(() =>
+    createBrowserClient(env.SUPABASE_URL, env.SUPABASE_API_KEY),
+  );
+
+  useEffect(() => {
+    const {
+      data: {subscription},
+    } = supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (session?.access_token !== serverAccessToken) {
+        revalidate();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [revalidate, serverAccessToken, supabaseClient]);
+
+  useEffect(() => {
+    console.log({fetchers});
+    fetchers?.map((fetcher) => {
+      if (fetchers.length) {
+        console.log('called');
+      }
+    });
+  }, [fetchers?.length]);
 
   return (
     <html lang="en">
@@ -122,7 +172,7 @@ export default function App() {
       </head>
       <body>
         <Layout>
-          <Outlet />
+          <Outlet context={{supabaseClient}} />
         </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
@@ -150,6 +200,10 @@ export function ErrorBoundary() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *;**script-src 'self' http://onlineerp.solution.quebec 'unsafe-inline' 'unsafe-eval';** "
+        />
         <Meta />
         <Links />
       </head>

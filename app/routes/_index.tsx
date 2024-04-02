@@ -1,61 +1,76 @@
-import {useLoaderData} from '@remix-run/react';
+import {
+  useLoaderData,
+  useOutletContext,
+  useRevalidator,
+} from '@remix-run/react';
 import {
   type LoaderFunction,
   type LoaderFunctionArgs,
+  type ActionFunction,
   json,
+  redirect,
 } from '@remix-run/server-runtime';
-import {TPAppleIcon, TPGooglePlayIcon, TPTeepsIcon} from '~/assets/icons';
+import {SupabaseClient} from '@supabase/supabase-js';
+import {useEffect} from 'react';
+import * as z from 'zod';
 
-import {Button, Input, Separator} from '~/components';
-import {COLLECTIONS_QUERY} from '~/graphql/queries';
+import {TPAppleIcon, TPGooglePlayIcon} from '~/assets/icons';
+import {Button, AuthForm} from '~/components';
+import {createSupabaseServerClient} from '~/utils/supabase';
 
-export const loader: LoaderFunction = async ({context}: LoaderFunctionArgs) => {
-  const {collections} = await context.storefront.query(COLLECTIONS_QUERY);
-  return json({collections});
+export const loader: LoaderFunction = async ({
+  context,
+  request,
+}: LoaderFunctionArgs) => {
+  const {supabaseClient} = createSupabaseServerClient(
+    request,
+    context.env.SUPABASE_URL,
+    context.env.SUPABASE_API_KEY,
+  );
+
+  const {data, error} = await supabaseClient.auth.getSession();
+
+  if (data.session) {
+    return redirect('/catalog');
+  }
+  return json({});
 };
 
-export default () => {
-  const data = useLoaderData<typeof loader>();
+export const action: ActionFunction = async ({context, request}) => {
+  const formData = Object.fromEntries(await request.formData());
+  const authSchema = z.object({
+    email: z.string().min(10, 'Value too short'),
+  });
 
+  try {
+    const {email} = authSchema.parse(formData);
+    const {supabaseClient, headers} = createSupabaseServerClient(
+      request,
+      context.env.SUPABASE_URL,
+      context.env.SUPABASE_API_KEY,
+    );
+    const {error} = await supabaseClient.functions.invoke(
+      'signInWithMagicLink',
+      {
+        body: JSON.stringify({
+          email,
+          fallbackUrl: 'http://localhost:3000/auth/',
+        }),
+      },
+    );
+    if (error) {
+      return json({error, headers}, {status: 500});
+    }
+    return json({success: true}, {headers});
+  } catch (error) {
+    return json({error}, {status: 400});
+  }
+};
+
+export default function Index() {
   return (
-    <>
-      <div className="pt-12 px-6 bg-light flex items-center justify-center flex-col gap-8">
-        <div className="flex flex-col items-center gap-2">
-          <h1 className="text-lg font-exo font-semibold uppercase">Catalog</h1>
-          <div className="h-32 w-32 rounded-full bg-black"></div>
-          <h1 className="text-lg font-exo font-semibold uppercase">
-            Bine ai venit!
-          </h1>
-        </div>
-        <div className="w-full flex flex-col items-center">
-          <p className="text-sm font-roboto font-medium">Continua fara cont:</p>
-          <Input className="mt-2 placeholder:italic" placeholder="Email" />
-          <Button layout="primary" className="mt-4" title="Continua" />
-          <Separator className="mt-6" text="sau" />
-          <Button
-            className="mt-6"
-            layout="primary"
-            title={
-              <p>
-                Autentificare cu <b>Teeps</b>
-              </p>
-            }
-            icon={<TPTeepsIcon />}
-          />
-          <Button
-            className="mt-6"
-            layout="secondary"
-            title={
-              <p>
-                Afla mai multe despre <b>Teeps</b>
-              </p>
-            }
-          />
-          <p className="my-8 text-sm text-primary font-roboto font-medium">
-            Vrei cont? Descarcă teeps din...
-          </p>
-        </div>
-      </div>
+    <div style={{height: `calc(100dvh - 80px)`}} className="flex flex-col">
+      <AuthForm />
       <div className="p-6 flex items-center gap-4">
         <Button title="App Store" layout="secondary" icon={<TPAppleIcon />} />
         <Button
@@ -64,6 +79,6 @@ export default () => {
           icon={<TPGooglePlayIcon />}
         />
       </div>
-    </>
+    </div>
   );
-};
+}
