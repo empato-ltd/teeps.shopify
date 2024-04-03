@@ -1,4 +1,4 @@
-import {memo, useState} from 'react';
+import {memo, useEffect, useState} from 'react';
 import {useFetcher, useSearchParams} from '@remix-run/react';
 import {useForm, type SubmitHandler} from 'react-hook-form';
 import * as z from 'zod';
@@ -28,12 +28,15 @@ export const AuthForm = memo(() => {
 
   const onSubmit: SubmitHandler<AuthSchemaType> = async (data) => {
     setLoading(true);
-    // fetcher.submit({...data}, {method: 'post'});
-    setTimeout(() => {
+    fetcher.submit({...data}, {method: 'post'});
+  };
+
+  useEffect(() => {
+    if (loading && fetcher.state === 'idle') {
       setLoading(false);
       setEmailSent(true);
-    }, 1500);
-  };
+    }
+  }, [fetcher]);
 
   return (
     <fetcher.Form
