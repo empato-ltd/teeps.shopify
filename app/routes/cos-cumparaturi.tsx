@@ -144,7 +144,7 @@ export default function Cart() {
             href={cart?.checkoutUrl}
             target="_blank"
             rel="noreferrer"
-            className="bg-primary flex w-full h-10 items-center justify-center gap-1 rounded-[20px]"
+            className="bg-primary hover:bg-dark flex w-full h-10 items-center justify-center gap-1 rounded-[20px]"
           >
             <TPCreditCardIcon color="white" height={20} width={20} />
             <span className="font-roboto text-white text-xs">Plateste</span>

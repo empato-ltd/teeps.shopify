@@ -18,15 +18,17 @@ import {
   useRevalidator,
   useFetchers,
 } from '@remix-run/react';
-import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
+import {toast, Toaster} from 'react-hot-toast';
+
 import favicon from '../public/favicon.svg';
 import appStyles from './styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {Layout} from './layout';
-import {COLLECTIONS_QUERY, COLLECTION_QUERY} from './graphql/queries';
+import {COLLECTIONS_QUERY} from './graphql/queries';
 import {useEffect, useState} from 'react';
 import {createBrowserClient} from '@supabase/ssr';
 import {createSupabaseServerClient} from './utils/supabase';
+import {capitalizeWords} from './functions/utils';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -153,6 +155,28 @@ export default function App() {
     };
   }, [revalidate, serverAccessToken, supabaseClient]);
 
+  useEffect(() => {
+    fetchers.map((fetcher) => {
+      console.log({fetcher});
+      if (fetcher.state === 'loading') {
+        const cartFormInput: any = JSON.parse(
+          fetcher.formData?.get('cartFormInput') as any,
+        );
+        if (cartFormInput?.inputs?.title) {
+          toast.custom(
+            <div className="z-[9999999] bg-white shadow-lg border border-secondary rounded-md py-2 px-4">
+              <p className="font-exo text-sm">
+                {`${capitalizeWords(
+                  cartFormInput?.inputs?.title,
+                )} added to cart`}
+              </p>
+            </div>,
+          );
+        }
+      }
+    });
+  }, [fetchers]);
+
   return (
     <html lang="en">
       <head>
@@ -162,7 +186,8 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout cart={cart as CartReturn}>
+        <Layout cart={(cart as CartReturn) || []}>
+          <Toaster />
           <Outlet context={{supabaseClient}} />
         </Layout>
         <ScrollRestoration nonce={nonce} />

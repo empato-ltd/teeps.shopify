@@ -14,6 +14,7 @@ import {CartForm, ShopPayButton} from '@shopify/hydrogen';
 
 import {TPChevronLeftIcon, TPStarIcon} from '~/assets/icons';
 import {PRODUCT_QUERY} from '~/graphql/queries/product';
+import {capitalizeWords} from '~/functions/utils';
 
 export const meta: MetaFunction = () => {
   return [{title: 'Teeps | Testament | Produs'}];
@@ -89,7 +90,8 @@ export default function Product() {
                 </div>
                 <div className="bg-white px-4 border-b border-secondary h-16 flex items-center justify-between">
                   <p className="font-roboto font-semibold text-sm">
-                    {product?.title}
+                    {capitalizeWords(product?.title)}
+                    {product?.tags?.includes('flagship')}
                   </p>
                   <p className="font-roboto font-semibold text-sm">{`${product?.variants?.nodes?.[0]?.price?.currencyCode} ${product?.variants?.nodes?.[0]?.price?.amount}0`}</p>
                 </div>
@@ -142,6 +144,7 @@ export default function Product() {
                           quantity: count,
                         },
                       ],
+                      title: product?.title,
                     }}
                   >
                     <button className="h-10 bg-primary rounded-[20px] px-6 text-white font-roboto text-sm">

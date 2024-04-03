@@ -1,12 +1,11 @@
-import {memo} from 'react';
-import {Form, useFetcher} from '@remix-run/react';
+import {memo, useState} from 'react';
+import {useFetcher, useSearchParams} from '@remix-run/react';
 import {useForm, type SubmitHandler} from 'react-hook-form';
 import * as z from 'zod';
 import {zodResolver} from '@hookform/resolvers/zod';
 
-import {Button, Input, Separator} from '..';
-import {TPTeepsIcon} from '~/assets/icons';
-import {supabase} from '~/utils/supabase';
+import {Button, Input} from '..';
+import testamentLogo from 'public/images/testamentLogo.png';
 
 const authSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -23,11 +22,17 @@ export const AuthForm = memo(() => {
   } = useForm<AuthSchemaType>({
     resolver: zodResolver(authSchema),
   });
-
   const fetcher = useFetcher();
+  const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const onSubmit: SubmitHandler<AuthSchemaType> = async (data) => {
-    fetcher.submit({...data}, {method: 'post'});
+    setLoading(true);
+    // fetcher.submit({...data}, {method: 'post'});
+    setTimeout(() => {
+      setLoading(false);
+      setEmailSent(true);
+    }, 1500);
   };
 
   return (
@@ -39,7 +44,9 @@ export const AuthForm = memo(() => {
     >
       <div className="flex flex-col items-center gap-2">
         <h1 className="text-lg font-exo font-semibold uppercase">Catalog</h1>
-        <div className="h-32 w-32 rounded-full bg-black"></div>
+        <div className="h-32 w-32 rounded-full bg-black flex items-center justify-center">
+          <img src={testamentLogo} alt="t" height={100} width={100} />
+        </div>
         <h1 className="text-lg font-exo font-semibold uppercase">
           Bine ai venit!
         </h1>
@@ -57,8 +64,16 @@ export const AuthForm = memo(() => {
             {errors.email?.message}
           </p>
         </div>
-        <Button className="mt-1" layout="primary" title="Continua" />
-
+        <Button
+          disabled={emailSent}
+          loading={loading}
+          className="mt-1"
+          layout="primary"
+          title="Continua"
+        />
+        {emailSent && (
+          <p className="text-xs text-primary mt-2">Check your email</p>
+        )}
         <div className="flex-1 flex flex-col justify-end">
           <p className="my-8 text-sm text-primary font-roboto font-medium">
             Descarca aplicatia Teeps

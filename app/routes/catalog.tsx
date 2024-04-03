@@ -153,9 +153,9 @@ const ProductCard = ({edge}: {edge: any}) => {
         <div>
           <p className="text-sm font-medium">{`${edge?.node?.variants?.edges?.[0]?.node?.price?.currencyCode} ${edge?.node?.variants?.edges?.[0]?.node?.price?.amount}0`}</p>
           <div className="flex items-center gap-2 mt-1">
-            <button className="h-7 px-3 border border-black rounded-[14px]">
+            {/* <button className="h-7 px-3 border border-black rounded-[14px]">
               <TPToGoIcon />
-            </button>
+            </button> */}
             <CartForm
               route="/cos-cumparaturi"
               action={CartForm.ACTIONS.LinesAdd}

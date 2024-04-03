@@ -38,8 +38,12 @@ export const TopBar = memo(({cart}: {cart: CartReturn}) => {
           <TPSearchIcon />
           <Link to="/cos-cumparaturi" className="relative">
             <TPBagIcon />
-            {cart.totalQuantity && (
-              <span className="absolute w-5 h-5 rounded-full bg-primary top-0 right-0 translate-x-1/2 -translate-y-1/2 text-white flex items-center justify-center text-xs">
+            {cart?.totalQuantity && (
+              <span
+                className={`absolute w-5 h-5 rounded-full bg-primary top-0 right-0 translate-x-1/2 -translate-y-1/2 text-white flex items-center justify-center ${
+                  cart.totalQuantity > 10 ? 'text-[10px]' : 'text-xs'
+                }`}
+              >
                 {cart?.totalQuantity}
               </span>
             )}
