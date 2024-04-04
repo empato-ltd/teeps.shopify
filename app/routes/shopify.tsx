@@ -48,8 +48,6 @@ export const action: ActionFunction = async ({
       );
     }
 
-    console.log(JSON.stringify({createData}));
-
     const customerAccessToken = await doLogin(context, {
       email: email as string,
       password: password as string,
@@ -68,7 +66,5 @@ export const action: ActionFunction = async ({
 
 export default function Shopify() {
   const data = useLoaderData();
-  console.log({data});
-
   return null;
 }

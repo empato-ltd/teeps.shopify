@@ -58,14 +58,7 @@ export default function Auth() {
             access_token,
             refresh_token,
           });
-          if (!error && data.user?.email && data.user?.id) {
-            fetcher.submit(
-              {email: data.user.email, password: data.user.id},
-              {action: '/shopify', method: 'POST'},
-            );
-          } else {
-            navigate('/');
-          }
+          navigate('/');
         } else {
           navigate('/');
         }

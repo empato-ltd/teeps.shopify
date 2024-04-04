@@ -79,7 +79,7 @@ export default function Product() {
                     <ShopPayButton
                       variantIdsAndQuantities={[
                         {
-                          id: 'gid://shopify/ProductVariant/46079877677341',
+                          id: product?.variants?.nodes?.[0]?.id,
                           quantity: count,
                         },
                       ]}
@@ -115,6 +115,35 @@ export default function Product() {
                   <p className="text-text text-xs mt-2 font-light">
                     {product?.description}
                   </p>
+                  {(product?.tags?.includes('flagship') ||
+                    product?.tags?.includes('bullet')) && (
+                    <div className="mt-2 font-roboto">
+                      <div className="py-2 border-y border-secondary">
+                        <p className="text-sm">Top Notes</p>
+                        <p className="text-xs text-text">
+                          {JSON.parse(product?.metafields?.[2]?.value)
+                            .toString()
+                            .replaceAll(',', ', ')}
+                        </p>
+                      </div>
+                      <div className="py-2 border-b border-secondary">
+                        <p className="text-sm">Heart Notes</p>
+                        <p className="text-xs text-text">
+                          {JSON.parse(product?.metafields?.[3]?.value)
+                            .toString()
+                            .replaceAll(',', ', ')}
+                        </p>
+                      </div>
+                      <div className="py-2 border-b border-secondary">
+                        <p className="text-sm">Base Notes</p>
+                        <p className="text-xs text-text">
+                          {JSON.parse(product?.metafields?.[4]?.value)
+                            .toString()
+                            .replaceAll(',', ', ')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="fixed bottom-0 h-[100px] px-6 w-full bg-white flex justify-between items-center border-t border-secondary">
                   <div className="flex items-center">

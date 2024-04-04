@@ -157,7 +157,6 @@ export default function App() {
 
   useEffect(() => {
     fetchers.map((fetcher) => {
-      console.log({fetcher});
       if (fetcher.state === 'loading') {
         const cartFormInput: any = JSON.parse(
           fetcher.formData?.get('cartFormInput') as any,

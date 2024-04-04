@@ -73,7 +73,12 @@ const CartLine = ({line}: {line: CartLine}) => {
                 ? '15 ml'
                 : ''
             }`}</p>
-            <p className="leading-none">Nose: Chris Maurice</p>
+            {(line?.merchandise?.product?.tags?.includes('flagship') ||
+              line?.merchandise?.product?.tags?.includes('bullet')) && (
+              <p className="leading-none">
+                Nose: {line?.merchandise?.product?.metafields?.[1]?.value}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex-1 flex flex-col items-end justify-between">
@@ -114,7 +119,7 @@ export default function Cart() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-[100dvh] bg-light">
+    <div className="min-h-[100dvh] bg-light pb-32">
       <div className="p-4 border border-secondary flex items-center bg-white">
         <div className="flex-1">
           <button
@@ -132,6 +137,10 @@ export default function Cart() {
           {cart?.lines?.nodes?.map((node, index) => (
             <CartLine key={`${node.id}`} line={node as CartLine} />
           ))}
+          <div className="w-full bg-white py-2 rounded-lg px-2 mt-4 flex justify-between font-roboto">
+            <p className="text-sm font-medium">Totalul comenzii:</p>
+            <p className="text-sm font-semibold">{`${cart?.cost?.totalAmount?.currencyCode} ${cart?.cost?.totalAmount?.amount}`}</p>
+          </div>
         </div>
       ) : (
         <div className="pt-10 flex items-center justify-center">
