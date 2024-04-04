@@ -10,9 +10,9 @@ import {
 } from '@shopify/hydrogen';
 import {
   createRequestHandler,
-  getStorefrontHeaders,
+  // getStorefrontHeaders,
   type AppLoadContext,
-} from '@shopify/remix-oxygen';
+} from '@remix-run/cloudflare';
 import {AppSession} from '~/lib/session';
 import {CART_QUERY_FRAGMENT} from '~/lib/fragments';
 
@@ -50,7 +50,12 @@ export default {
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontId: env.PUBLIC_STOREFRONT_ID,
-        storefrontHeaders: getStorefrontHeaders(request),
+        storefrontHeaders: {
+          requestGroupId: request.headers.get('request-id'),
+          buyerIp: request.headers.get('CF-Connecting-IP') || '',
+          purpose: '',
+          cookie: request.headers.get('cookie') || '',
+        },
       });
 
       /**

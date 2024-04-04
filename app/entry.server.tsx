@@ -1,4 +1,4 @@
-import type {EntryContext} from '@shopify/remix-oxygen';
+import type {EntryContext} from '@remix-run/cloudflare';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
@@ -10,7 +10,18 @@ export default async function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
-  const {nonce, header, NonceProvider} = createContentSecurityPolicy();
+  const {nonce, header, NonceProvider} = createContentSecurityPolicy({
+    styleSrc: ['https://cdn.shopify.com', 'https://fonts.googleapis.com/'],
+    fontSrc: ['https://fonts.gstatic.com'],
+    connectSrc: [
+      'self',
+      'https://monorail-edge.shopifysvc.com',
+      'http://localhost:*',
+      'ws://localhost:*',
+      'ws://127.0.0.1:*',
+      'https://lnepnilpfetzawaaihnx.supabase.co',
+    ],
+  });
 
   const body = await renderToReadableStream(
     <NonceProvider>
@@ -32,7 +43,7 @@ export default async function handleRequest(
   }
 
   responseHeaders.set('Content-Type', 'text/html');
-  responseHeaders.set('Content-Security-Policy', header);
+  // responseHeaders.set('Content-Security-Policy', header);
 
   return new Response(body, {
     headers: responseHeaders,

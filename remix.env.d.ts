@@ -1,5 +1,6 @@
 /// <reference types="@remix-run/dev" />
 /// <reference types="@shopify/remix-oxygen" />
+/// <reference types="@remix-run/cloudflare" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
 // Enhance TypeScript's built-in typings.
@@ -25,10 +26,12 @@ declare global {
     PUBLIC_STOREFRONT_ID: string;
     PUBLIC_CUSTOMER_ACCOUNT_API_CLIENT_ID: string;
     PUBLIC_CUSTOMER_ACCOUNT_API_URL: string;
+    SUPABASE_URL: string;
+    SUPABASE_API_KEY: string;
   }
 }
 
-declare module '@shopify/remix-oxygen' {
+declare module '@remix-run/cloudflare' {
   /**
    * Declare local additions to the Remix loader context.
    */

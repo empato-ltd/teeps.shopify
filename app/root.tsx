@@ -1,28 +1,34 @@
-import {useNonce} from '@shopify/hydrogen';
+import {CartReturn, Script, useNonce} from '@shopify/hydrogen';
 import {
   defer,
   type SerializeFrom,
   type LoaderFunctionArgs,
-} from '@shopify/remix-oxygen';
+} from '@remix-run/cloudflare';
 import {
   Links,
   Meta,
   Outlet,
   Scripts,
-  LiveReload,
   useMatches,
   useRouteError,
   useLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
   type ShouldRevalidateFunction,
+  useRevalidator,
+  useFetchers,
 } from '@remix-run/react';
-import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
+import {toast, Toaster} from 'react-hot-toast';
+
 import favicon from '../public/favicon.svg';
-import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
-import {Layout} from '~/components/Layout';
 import tailwindCss from './styles/tailwind.css';
+import {Layout} from './layout';
+import {COLLECTIONS_QUERY} from './graphql/queries';
+import {useEffect, useState} from 'react';
+import {createBrowserClient} from '@supabase/ssr';
+import {createSupabaseServerClient} from './utils/supabase';
+import {capitalizeWords} from './functions/utils';
 
 /**
  * This is important to avoid re-fetching root queries on sub-navigations
@@ -47,9 +53,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export function links() {
   return [
-    {rel: 'stylesheet', href: tailwindCss},
-    {rel: 'stylesheet', href: resetStyles},
     {rel: 'stylesheet', href: appStyles},
+    {rel: 'stylesheet', href: tailwindCss},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -70,11 +75,19 @@ export const useRootLoaderData = () => {
   return root?.data as SerializeFrom<typeof loader>;
 };
 
-export async function loader({context}: LoaderFunctionArgs) {
+export async function loader({context, request}: LoaderFunctionArgs) {
   const {storefront, customerAccount, cart} = context;
-  const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
-
+  const publicStoreDomain = (context.cloudflare as any).env.PUBLIC_STORE_DOMAIN;
   const isLoggedInPromise = customerAccount.isLoggedIn();
+  const {supabaseClient} = createSupabaseServerClient(
+    request,
+    (context.cloudflare as any).env.SUPABASE_URL,
+    (context.cloudflare as any).env.SUPABASE_API_KEY,
+  );
+
+  const {
+    data: {session},
+  } = await supabaseClient.auth.getSession();
 
   // defer the cart query by not awaiting it
   const cartPromise = cart.get();
@@ -94,14 +107,20 @@ export async function loader({context}: LoaderFunctionArgs) {
       headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
   });
+  const {collections} = await context.storefront.query(COLLECTIONS_QUERY);
+  const {collection} = await context.storefront.query(COLLECTIONS_QUERY);
 
   return defer(
     {
-      cart: cartPromise,
+      cart: await cart.get(),
       footer: footerPromise,
       header: await headerPromise,
       isLoggedIn: isLoggedInPromise,
       publicStoreDomain,
+      collections: collections?.edges?.map((edge: any) => edge?.node),
+      collection,
+      env: (context.cloudflare as any).env,
+      session,
     },
     {
       headers: {
@@ -113,7 +132,50 @@ export async function loader({context}: LoaderFunctionArgs) {
 
 export default function App() {
   const nonce = useNonce();
-  const data = useLoaderData<typeof loader>();
+  const {session, env, cart} = useLoaderData<typeof loader>();
+  const {revalidate} = useRevalidator();
+  const fetchers = useFetchers();
+  const serverAccessToken = session?.access_token;
+
+  const [supabaseClient] = useState(() =>
+    createBrowserClient(env.SUPABASE_URL, env.SUPABASE_API_KEY),
+  );
+
+  useEffect(() => {
+    const {
+      data: {subscription},
+    } = supabaseClient.auth.onAuthStateChange((event, session) => {
+      if (session?.access_token !== serverAccessToken) {
+        revalidate();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [revalidate, serverAccessToken, supabaseClient]);
+
+  useEffect(() => {
+    fetchers.map((fetcher) => {
+      console.log({fetcher});
+      if (fetcher.state === 'loading') {
+        const cartFormInput: any = JSON.parse(
+          fetcher.formData?.get('cartFormInput') as any,
+        );
+        if (cartFormInput?.inputs?.title) {
+          toast.custom(
+            <div className="z-[9999999] bg-white shadow-lg border border-secondary rounded-md py-2 px-4">
+              <p className="font-exo text-sm">
+                {`${capitalizeWords(
+                  cartFormInput?.inputs?.title,
+                )} added to cart`}
+              </p>
+            </div>,
+          );
+        }
+      }
+    });
+  }, [fetchers]);
 
   return (
     <html lang="en">
@@ -124,12 +186,12 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
-          <Outlet />
+        <Layout cart={(cart as CartReturn) || []}>
+          <Toaster />
+          <Outlet context={{supabaseClient}} />
         </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
@@ -154,24 +216,16 @@ export function ErrorBoundary() {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="default-src 'self' data: gap: https://ssl.gstatic.com 'unsafe-eval'; style-src 'self' 'unsafe-inline'; media-src *;**script-src 'self' http://onlineerp.solution.quebec 'unsafe-inline' 'unsafe-eval';** "
+        />
         <Meta />
         <Links />
       </head>
       <body>
-        <Layout {...rootData}>
-          <div className="route-error">
-            <h1>Oops</h1>
-            <h2>{errorStatus}</h2>
-            {errorMessage && (
-              <fieldset>
-                <pre>{errorMessage}</pre>
-              </fieldset>
-            )}
-          </div>
-        </Layout>
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
-        <LiveReload nonce={nonce} />
       </body>
     </html>
   );

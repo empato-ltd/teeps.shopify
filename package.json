@@ -4,26 +4,31 @@
   "sideEffects": false,
   "version": "1.0.2",
   "scripts": {
-    "build": "shopify hydrogen build",
-    "dev": "shopify hydrogen dev --codegen",
-    "preview": "npm run build && shopify hydrogen preview",
-    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
-    "typecheck": "tsc --noEmit",
-    "codegen": "shopify hydrogen codegen"
+    "build": "remix build",
+    "dev": "remix dev --manual -c \"npm run start\"",
+    "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
+    "start": "wrangler pages dev --compatibility-date=2023-06-21 ./public",
+    "typecheck": "tsc"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
+    "@hookform/resolvers": "^3.3.4",
+    "@remix-run/cloudflare": "^2.8.1",
+    "@remix-run/cloudflare-pages": "^2.8.1",
     "@remix-run/react": "^2.5.1",
     "@remix-run/server-runtime": "^2.5.1",
-    "@shopify/cli": "3.52.0",
-    "@shopify/cli-hydrogen": "^7.0.0",
     "@shopify/hydrogen": "~2024.1.0",
-    "@shopify/remix-oxygen": "^2.0.3",
+    "@supabase/ssr": "0.1.0",
+    "@supabase/supabase-js": "2.40.0",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "isbot": "^3.6.6",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.51.2",
+    "react-hot-toast": "^2.4.1",
+    "tiny-invariant": "^1.3.3",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.5.1",
@@ -43,7 +48,8 @@
     "postcss-preset-env": "^8.2.0",
     "prettier": "^2.8.4",
     "tailwindcss": "^3.3.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "wrangler": "^3.45.0"
   },
   "engines": {
     "node": ">=18.0.0"
