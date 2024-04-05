@@ -28,7 +28,13 @@ export const AuthForm = memo(() => {
 
   const onSubmit: SubmitHandler<AuthSchemaType> = async (data) => {
     setLoading(true);
-    fetcher.submit({...data}, {method: 'post'});
+    fetcher.submit(
+      {
+        ...data,
+        fallbackUrl: `${window.location.protocol}//${window.location.host}/auth/`,
+      },
+      {method: 'post'},
+    );
   };
 
   useEffect(() => {

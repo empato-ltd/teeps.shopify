@@ -40,10 +40,11 @@ export const action: ActionFunction = async ({context, request}) => {
   const formData = Object.fromEntries(await request.formData());
   const authSchema = z.object({
     email: z.string().min(10, 'Value too short'),
+    fallbackUrl: z.string().min(1),
   });
 
   try {
-    const {email} = authSchema.parse(formData);
+    const {email, fallbackUrl} = authSchema.parse(formData);
     const {supabaseClient, headers} = createSupabaseServerClient(
       request,
       context.env.SUPABASE_URL,
@@ -54,7 +55,7 @@ export const action: ActionFunction = async ({context, request}) => {
       {
         body: JSON.stringify({
           email,
-          fallbackUrl: `${window.location.protocol}//${window.location.host}/auth/`,
+          fallbackUrl,
         }),
       },
     );
