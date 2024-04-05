@@ -73,12 +73,26 @@ export default function Index() {
     <div style={{height: `calc(100dvh - 80px)`}} className="flex flex-col">
       <AuthForm />
       <div className="p-6 flex items-center gap-4">
-        <Button title="App Store" layout="secondary" icon={<TPAppleIcon />} />
-        <Button
-          title="Google Play"
-          layout="secondary"
-          icon={<TPGooglePlayIcon />}
-        />
+        <a
+          className="w-full"
+          target="_blank"
+          rel="noreferrer"
+          href="https://apps.apple.com/ro/app/teeps/id6446121848"
+        >
+          <Button title="App Store" layout="secondary" icon={<TPAppleIcon />} />
+        </a>
+        <a
+          href="https://play.google.com/store/apps/details?id=app.teeps.v1&pcampaignid=web_share"
+          target="_blank"
+          rel="noreferrer"
+          className="w-full"
+        >
+          <Button
+            title="Google Play"
+            layout="secondary"
+            icon={<TPGooglePlayIcon />}
+          />
+        </a>
       </div>
     </div>
   );
