@@ -21,6 +21,7 @@ export default async function handleRequest(
       'ws://127.0.0.1:*',
       'https://lnepnilpfetzawaaihnx.supabase.co',
     ],
+    imgSrc: ['self', 'http://localhost:*', 'data:', '*'],
   });
 
   const body = await renderToReadableStream(
