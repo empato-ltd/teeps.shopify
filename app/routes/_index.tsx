@@ -54,7 +54,7 @@ export const action: ActionFunction = async ({context, request}) => {
       {
         body: JSON.stringify({
           email,
-          fallbackUrl: 'http://localhost:3000/auth/',
+          fallbackUrl: `${window.location.protocol}//${window.location.host}/auth/`,
         }),
       },
     );
